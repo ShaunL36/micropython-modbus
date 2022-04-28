@@ -29,7 +29,7 @@ class Modbus(object):
         for reg_type in self._available_register_types:
             self._register_dict[reg_type] = dict()
         self._default_vals = dict(zip(self._available_register_types,
-                                      [True, 999, 999, True]))
+                                      [False, 0, 0, False]))
 
         # registers which can be set by remote device
         self._changeable_register_types = ['COILS', 'HREGS']
@@ -48,7 +48,7 @@ class Modbus(object):
         :param      value:    The default value
         :type       value:    Union[bool, List[bool]], optional
         """
-        self._set_reg_in_dict(reg_type='COILS',
+        self._add_reg_to_dict(reg_type='COILS',
                               address=address,
                               value=value)
 
@@ -75,11 +75,11 @@ class Modbus(object):
         :param      value:    The default value
         :type       value:    Union[bool, List[bool]], optional
         """
-        self._set_reg_in_dict(reg_type='COILS',
-                              address=address,
-                              value=value)
+        return self._set_reg_in_dict(reg_type='COILS',
+                                     address=address,
+                                     value=value)
 
-    def get_coil(self, address: int) -> Union[bool, List[bool]]:
+    def get_coil(self, address: int, count: int) -> Union[bool, List[bool]]:
         """
         Get the coil value.
 
@@ -90,7 +90,7 @@ class Modbus(object):
         :rtype:     Union[bool, List[bool]]
         """
         return self._get_reg_in_dict(reg_type='COILS',
-                                     address=address)
+                                     address=address, count=count)
 
     @property
     def coils(self) -> dict_keys:
@@ -111,7 +111,7 @@ class Modbus(object):
         :param      value:    The default value
         :type       value:    Union[int, List[int]], optional
         """
-        self._set_reg_in_dict(reg_type='HREGS',
+        self._add_reg_to_dict(reg_type='HREGS',
                               address=address,
                               value=value)
 
@@ -136,11 +136,11 @@ class Modbus(object):
         :param      value:    The default value
         :type       value:    int or list of int, optional
         """
-        self._set_reg_in_dict(reg_type='HREGS',
-                              address=address,
-                              value=value)
+        return self._set_reg_in_dict(reg_type='HREGS',
+                                     address=address,
+                                     value=value)
 
-    def get_hreg(self, address: int) -> Union[int, List[int]]:
+    def get_hreg(self, address: int, count: int) -> Union[int, List[int]]:
         """
         Get the holding register value.
 
@@ -151,7 +151,7 @@ class Modbus(object):
         :rtype:     Union[int, List[int]]
         """
         return self._get_reg_in_dict(reg_type='HREGS',
-                                     address=address)
+                                     address=address, count=count)
 
     @property
     def hregs(self) -> dict_keys:
@@ -174,7 +174,7 @@ class Modbus(object):
         :param      value:    The default value
         :type       value:    bool or list of bool, optional
         """
-        self._set_reg_in_dict(reg_type='ISTS',
+        self._add_reg_to_dict(reg_type='ISTS',
                               address=address,
                               value=value)
 
@@ -199,11 +199,11 @@ class Modbus(object):
         :param      value:    The default value
         :type       value:    bool or list of bool, optional
         """
-        self._set_reg_in_dict(reg_type='ISTS',
-                              address=address,
-                              value=value)
+        return self._set_reg_in_dict(reg_type='ISTS',
+                                     address=address,
+                                     value=value)
 
-    def get_ist(self, address: int) -> Union[bool, List[bool]]:
+    def get_ist(self, address: int, count: int) -> Union[bool, List[bool]]:
         """
         Get the discrete input register value.
 
@@ -214,7 +214,7 @@ class Modbus(object):
         :rtype:     Union[bool, List[bool]]
         """
         return self._get_reg_in_dict(reg_type='ISTS',
-                                     address=address)
+                                     address=address, count=count)
 
     @property
     def ists(self) -> dict_keys:
@@ -235,7 +235,7 @@ class Modbus(object):
         :param      value:    The default value
         :type       value:    Union[int, List[int]], optional
         """
-        self._set_reg_in_dict(reg_type='IREGS',
+        self._add_reg_to_dict(reg_type='IREGS',
                               address=address,
                               value=value)
 
@@ -260,11 +260,11 @@ class Modbus(object):
         :param      value:    The default value
         :type       value:    Union[int, List[int]], optional
         """
-        self._set_reg_in_dict(reg_type='IREGS',
-                              address=address,
-                              value=value)
+        return self._set_reg_in_dict(reg_type='IREGS',
+                                     address=address,
+                                     value=value)
 
-    def get_ireg(self, address: int) -> Union[int, List[int]]:
+    def get_ireg(self, address: int, count: int) -> Union[int, List[int]]:
         """
         Get the input register value.
 
@@ -275,7 +275,7 @@ class Modbus(object):
         :rtype:     Union[int, List[int]]
         """
         return self._get_reg_in_dict(reg_type='IREGS',
-                                     address=address)
+                                     address=address, count=count)
 
     @property
     def iregs(self) -> dict_keys:
@@ -287,6 +287,47 @@ class Modbus(object):
         """
         return self._get_regs_of_dict(reg_type='IREGS')
 
+    def _add_reg_to_dict(self,
+                         reg_type: str,
+                         address: int,
+                         value: Union[bool, int, List[bool], List[int]]) -> None:
+        """
+        Add the register value to the dictionary of registers.
+
+        :param      reg_type:  The register type
+        :type       reg_type:  str
+        :param      address:   The address (ID) of the register
+        :type       address:   int
+        :param      value:     The default value
+        :type       value:     Union[bool, int, List[bool], List[int]]
+
+        :raise      KeyError:  No register at specified address found
+        :returns:   Register value
+        :rtype:     Union[bool, int, List[bool], List[int]]
+        """
+        if not self._check_valid_register(reg_type=reg_type):
+            raise KeyError('{} is not a valid register type of {}'.
+                           format(reg_type, self._available_register_types))
+        
+        count = len(value)
+        keys = sorted(self._register_dict[reg_type].keys())
+        for a in keys:
+            c = len(self._register_dict[reg_type][a])
+            if address >= a and address <= a + c: 
+                c = address - a
+                for i in range(c):
+                    value.insert(i,self._register_dict[reg_type][a][i])
+                address = a
+                count += c
+            elif address <= a and address + count >= a:
+                idx = address + count - a
+                for i in range(c - idx):
+                    value.append(self._register_dict[reg_type][a][i + idx])
+                self._register_dict[reg_type].pop(a)
+                count += c - idx
+        self._register_dict[reg_type][address] = value
+        #print('add', reg_type, self._register_dict[reg_type])
+        
     def _set_reg_in_dict(self,
                          reg_type: str,
                          address: int,
@@ -308,8 +349,23 @@ class Modbus(object):
         if not self._check_valid_register(reg_type=reg_type):
             raise KeyError('{} is not a valid register type of {}'.
                            format(reg_type, self._available_register_types))
-
-        self._register_dict[reg_type][address] = value
+        
+        if not isinstance(value,list):
+            value = [value]
+        count = len(value)
+        keys = sorted(self._register_dict[reg_type].keys())
+        for a in keys:
+            c = len(self._register_dict[reg_type][a])
+            if address >= a and address + count <= a + c:
+                idx = address - a
+                for i in range(count):
+                    self._register_dict[reg_type][a][i + idx] = value[i]
+                #print('set_reg', reg_type, self._register_dict[reg_type])
+                return 0
+            
+        print('No {} available for the register address {} to {}'.
+                       format(reg_type, address, address + count - 1))
+        return ModbusConst.ILLEGAL_DATA_ADDRESS
 
     def _remove_reg_from_dict(self,
                               reg_type: str,
@@ -334,7 +390,8 @@ class Modbus(object):
 
     def _get_reg_in_dict(self,
                          reg_type: str,
-                         address: int) -> Union[bool, int, List[bool], List[int]]:
+                         address: int,
+                         count: int) -> Union[bool, int, List[bool], List[int]]:
         """
         Get the register value from the dictionary of registers.
 
@@ -351,11 +408,20 @@ class Modbus(object):
             raise KeyError('{} is not a valid register type of {}'.
                            format(reg_type, self._available_register_types))
 
-        if address in self._register_dict[reg_type]:
-            return self._register_dict[reg_type][address]
-        else:
-            raise KeyError('No {} available for the register address {}'.
-                           format(reg_type, address))
+        keys = sorted(self._register_dict[reg_type].keys())
+        for a in keys:
+            c = len(self._register_dict[reg_type][a])
+            if address < a :
+                break
+            elif address > a + c: # address >= a
+                continue
+            elif address + count <= a + c:
+                idx = address - a
+                return 0, self._register_dict[reg_type][a][idx:idx + count]
+        
+        print('No {} available for the register address {} to {}'.
+                       format(reg_type, address, address + count - 1))
+        return ModbusConst.ILLEGAL_DATA_ADDRESS, []
 
     def _get_regs_of_dict(self, reg_type: str) -> dict_keys:
         """
@@ -487,7 +553,8 @@ class Modbus(object):
                                         timeout=0)
         if request is None:
             return False
-
+        #print('mbus0:',request.function)
+        #print('mbus1:',request.data)
         if request.function == ModbusConst.READ_COILS:
             # Coils (setter+getter) [0, 1]
             # function 01 - read single register
@@ -508,12 +575,12 @@ class Modbus(object):
             # function 04 - read input registers
             reg_type = 'IREGS'
             req_type = 'READ'
-        elif request.function == ModbusConst.WRITE_SINGLE_COIL:
+        elif request.function == ModbusConst.WRITE_SINGLE_COIL or request.function == ModbusConst.WRITE_MULTIPLE_COILS :
             # Coils (setter+getter) [0, 1]
             # function 05 - write single register
             reg_type = 'COILS'
             req_type = 'WRITE'
-        elif request.function == ModbusConst.WRITE_SINGLE_REGISTER:
+        elif request.function == ModbusConst.WRITE_SINGLE_REGISTER or request.function == ModbusConst.WRITE_MULTIPLE_REGISTERS :
             # Hregs (setter+getter) [0, 65535]
             # function 06 - write holding register
             reg_type = 'HREGS'
@@ -555,11 +622,11 @@ class Modbus(object):
         :param      reg_type:  The register type
         :type       reg_type:  str
         """
-        if request.register_addr in self._register_dict[reg_type]:
-            vals = self._create_response(request=request, reg_type=reg_type)
+        rc, vals = self._get_reg_in_dict(reg_type, request.register_addr, request.quantity)
+        if rc == 0:
             request.send_response(vals)
         else:
-            request.send_exception(ModbusConst.ILLEGAL_DATA_ADDRESS)
+            request.send_exception(rc)
 
     def _process_write_access(self, request: Request, reg_type: str) -> None:
         """
@@ -571,44 +638,38 @@ class Modbus(object):
         :type       reg_type:  str
         """
         address = request.register_addr
+        rc = 0
         val = 0
-        valid_register = False
-
-        if address in self._register_dict[reg_type]:
-            if reg_type == 'COILS':
+    
+        if reg_type == 'COILS':
+            if request.function == ModbusConst.WRITE_SINGLE_COIL :
                 val = request.data[0]
-                if val == 0x00:
-                    val = False
-                    valid_register = True
-
-                    request.send_response()
-
-                    self.set_coil(address=address, value=val)
-                elif val == 0xFF:
-                    val = True
-                    valid_register = True
-
-                    request.send_response()
-
-                    self.set_coil(address=address, value=val)
+                if val != 0x00 and val != 0xFF:
+                    rc = ModbusConst.ILLEGAL_DATA_VALUE
                 else:
-                    request.send_exception(ModbusConst.ILLEGAL_DATA_VALUE)
-            elif reg_type == 'HREGS':
-                valid_register = True
-                val = request.data_as_registers(signed=False)[0]
-
-                request.send_response()
-
-                self.set_hreg(address=address, value=val)
+                    if val == 0x00:
+                        val = False
+                    elif val == 0xFF:
+                        val = True
+                    rc = self.set_coil(address=address, value=val)
             else:
-                pass
-
-            if valid_register:
-                self._set_changed_register(reg_type=reg_type,
-                                           address=address,
-                                           value=val)
+                val = []
+                for i in range(request.quantity):
+                    val.append(((request.data[i//8] >> i % 8) & 0x1) > 0)
+                rc = self.set_coil(address=address, value=val)
+        elif reg_type == 'HREGS':
+            val = list(request.data_as_registers(signed=False))
+            rc = self.set_hreg(address=address, value=val)
         else:
-            request.send_exception(ModbusConst.ILLEGAL_DATA_ADDRESS)
+            rc = ModbusConst.ILLEGAL_FUNCTION
+
+        if rc == 0:
+            self._set_changed_register(reg_type=reg_type,
+                                       address=address,
+                                       value=val)
+            request.send_response()
+        else :
+            request.send_exception(rc)
 
     def setup_registers(self,
                         registers: dict = dict(),
