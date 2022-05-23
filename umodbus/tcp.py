@@ -41,10 +41,10 @@ class TCP(object):
 
         return mbap_hdr, trans_id
 
-    def _bytes_to_bool(self, byte_list):
+    def _bytes_to_bool(self, byte_list, bit_qty):
         bool_list = []
         for index, byte in enumerate(byte_list):
-            bool_list.extend([bool(byte & (1 << n)) for n in range(8)])
+            bool_list.extend([bool(byte & (1 << n)) for n in range(bit_qty)])
 
         return bool_list
 
@@ -95,7 +95,7 @@ class TCP(object):
         modbus_pdu = functions.read_coils(starting_addr, coil_qty)
 
         response = self._send_receive(slave_addr, modbus_pdu, True)
-        status_pdu = self._bytes_to_bool(response)
+        status_pdu = self._bytes_to_bool(response, coil_qty)
 
         return status_pdu
 
@@ -103,7 +103,7 @@ class TCP(object):
         modbus_pdu = functions.read_discrete_inputs(starting_addr, input_qty)
 
         response = self._send_receive(slave_addr, modbus_pdu, True)
-        status_pdu = self._bytes_to_bool(response)
+        status_pdu = self._bytes_to_bool(response, input_qty)
 
         return status_pdu
 
