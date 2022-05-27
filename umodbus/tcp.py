@@ -44,7 +44,11 @@ class TCP(object):
     def _bytes_to_bool(self, byte_list, bit_qty):
         bool_list = []
         for index, byte in enumerate(byte_list):
-            bool_list.extend([bool(byte & (1 << n)) for n in range(bit_qty)])
+            qty = bit_qty
+            if qty >= 8:
+                qty = 8
+            bool_list.extend([bool(byte & (1 << n)) for n in range(qty)])
+            bit_qty -= 8
 
         return bool_list
 
@@ -93,7 +97,7 @@ class TCP(object):
 
     def read_coils(self, slave_addr, starting_addr, coil_qty):
         modbus_pdu = functions.read_coils(starting_addr, coil_qty)
-
+        
         response = self._send_receive(slave_addr, modbus_pdu, True)
         status_pdu = self._bytes_to_bool(response, coil_qty)
 
